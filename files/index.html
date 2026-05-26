@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI CPU Scheduler — SEVEN UP</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header-inner">
+    <div class="logo-block">
+      <span class="logo-badge">7↑</span>
+      <div>
+        <div class="logo-title">AI CPU Scheduler</div>
+        <div class="logo-sub">by SEVEN UP</div>
+      </div>
+    </div>
+    <nav class="nav-tabs">
+      <button class="nav-tab active" data-section="input">① Input</button>
+      <button class="nav-tab" data-section="simulation">② Simulate</button>
+      <button class="nav-tab" data-section="gantt">③ Gantt</button>
+      <button class="nav-tab" data-section="metrics">④ Metrics</button>
+      <button class="nav-tab" data-section="ai">⑤ AI Panel</button>
+    </nav>
+    <button class="theme-toggle" id="themeToggle" title="Toggle theme">
+      <span id="themeIcon">☀</span>
+    </button>
+  </div>
+</header>
+
+<!-- MAIN -->
+<main class="main">
+
+  <!-- ① PROCESS INPUT -->
+  <section class="section active" id="section-input">
+    <div class="section-header">
+      <h2>Process Input</h2>
+      <p>Define processes for the simulation. Each process needs an arrival time and burst time.</p>
+    </div>
+    <div class="card glass">
+      <div class="card-toolbar">
+        <button class="btn btn-ghost" id="btnRandom">⚡ Random Processes</button>
+        <button class="btn btn-ghost" id="btnAddProcess">＋ Add Process</button>
+        <button class="btn btn-ghost" id="btnClear">✕ Clear All</button>
+      </div>
+      <div class="process-table-wrap">
+        <table class="process-table" id="processTable">
+          <thead>
+            <tr>
+              <th>Process</th>
+              <th>Arrival Time</th>
+              <th>Burst Time</th>
+              <th>AI Predicted Burst</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="processBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card glass rr-card">
+      <label class="field-label">Round Robin Time Quantum</label>
+      <div class="rr-control">
+        <input type="range" id="rrQuantum" min="1" max="5" value="2" class="slider">
+        <span class="rr-value" id="rrVal">2 ms</span>
+      </div>
+    </div>
+
+    <button class="btn btn-primary btn-lg" id="btnRunSim">▶ Run Simulation</button>
+  </section>
+
+  <!-- ② SIMULATION CONTROL -->
+  <section class="section" id="section-simulation">
+    <div class="section-header">
+      <h2>Simulation Control</h2>
+      <p>Choose how to run: with original burst times or AI-predicted burst times.</p>
+    </div>
+    <div class="mode-cards">
+      <div class="mode-card active" data-mode="original">
+        <div class="mode-icon">📊</div>
+        <div class="mode-title">Original Burst</div>
+        <div class="mode-desc">Use the exact burst times you entered</div>
+      </div>
+      <div class="mode-card" data-mode="ai">
+        <div class="mode-icon ai-glow">🤖</div>
+        <div class="mode-title">AI Predicted Burst</div>
+        <div class="mode-desc">Use exponential smoothing predictions</div>
+      </div>
+    </div>
+    <div class="algo-grid" id="algoGrid">
+      <div class="algo-toggle active" data-algo="fcfs">FCFS</div>
+      <div class="algo-toggle active" data-algo="sjf">SJF</div>
+      <div class="algo-toggle active" data-algo="rr">Round Robin</div>
+    </div>
+    <div class="loader" id="loader" style="display:none">
+      <div class="spinner"></div>
+      <span>Running simulation…</span>
+    </div>
+    <button class="btn btn-primary btn-lg" id="btnExecute">⚙ Execute</button>
+  </section>
+
+  <!-- ③ GANTT CHART -->
+  <section class="section" id="section-gantt">
+    <div class="section-header">
+      <h2>Gantt Chart</h2>
+      <p>Interactive timeline of process execution for each algorithm.</p>
+    </div>
+    <div class="gantt-algo-tabs" id="ganttAlgoTabs"></div>
+    <div class="card glass gantt-wrap" id="ganttWrap">
+      <canvas id="ganttCanvas"></canvas>
+      <div class="gantt-tooltip" id="ganttTooltip"></div>
+    </div>
+    <div class="gantt-legend" id="ganttLegend"></div>
+    <div class="gantt-actions">
+      <button class="btn btn-ghost" id="btnDownloadGantt">⬇ Download Gantt</button>
+    </div>
+  </section>
+
+  <!-- ④ METRICS -->
+  <section class="section" id="section-metrics">
+    <div class="section-header">
+      <h2>Performance Dashboard</h2>
+      <p>Compare scheduling algorithms side-by-side.</p>
+    </div>
+    <div class="metrics-grid" id="metricsGrid"></div>
+    <div class="charts-row">
+      <div class="card glass chart-card">
+        <div class="chart-title">Avg Waiting & Turnaround Time</div>
+        <canvas id="barChart"></canvas>
+      </div>
+      <div class="card glass chart-card">
+        <div class="chart-title">AI Improvement Analysis</div>
+        <canvas id="lineChart"></canvas>
+      </div>
+    </div>
+    <div class="ai-insight card glass" id="aiInsight"></div>
+    <div class="export-row">
+      <button class="btn btn-ghost" id="btnExportPDF">📄 Export PDF</button>
+    </div>
+  </section>
+
+  <!-- ⑤ AI PANEL -->
+  <section class="section" id="section-ai">
+    <div class="section-header">
+      <h2>AI Training Panel</h2>
+      <p>The predictor uses Exponential Smoothing — an adaptive online learning algorithm.</p>
+    </div>
+    <div class="card glass ai-panel">
+      <div class="ai-formula">
+        <span class="formula-label">Prediction Formula:</span>
+        <code class="formula">B̂<sub>t+1</sub> = α · B<sub>t</sub> + (1-α) · B̂<sub>t</sub></code>
+      </div>
+      <div class="alpha-control">
+        <label class="field-label">Smoothing Factor α</label>
+        <div class="rr-control">
+          <input type="range" id="alphaSlider" min="1" max="9" value="4" class="slider">
+          <span class="rr-value" id="alphaVal">0.4</span>
+        </div>
+      </div>
+      <div class="ai-history-table-wrap">
+        <table class="process-table" id="aiHistoryTable">
+          <thead>
+            <tr>
+              <th>Process</th>
+              <th>Run History (Burst Times)</th>
+              <th>Smoothed Prediction</th>
+              <th>Accuracy</th>
+            </tr>
+          </thead>
+          <tbody id="aiHistoryBody"></tbody>
+        </table>
+      </div>
+      <button class="btn btn-ghost" id="btnResetAI">↺ Reset AI Memory</button>
+    </div>
+  </section>
+
+</main>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <span>AI CPU Scheduling Simulator</span>
+  <span class="footer-brand">SEVEN UP ↑</span>
+  <span>Educational Tool · Client-Side Only</span>
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>
